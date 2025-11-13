@@ -9,8 +9,8 @@ library(conflicted)
 conflicts_prefer(dplyr::lag)
 conflicts_prefer(dplyr::filter)
 #constants-----------------------------
-set.seed(123)
-n_sims <- 100000
+#set.seed(123)
+n_sims <- 1000000
 #functions--------------------------------
 alluvial_plot <- function(tbbl, initial_age, subsequent_age, cost){
   tbbl|>
@@ -172,15 +172,15 @@ by_teer%>%
 dev.off()
 
 #heatmap not great for TEER
-# plt <- by_teer$transitions[by_teer$age_2011=="15_to_24_years"][[1]]|>
-#   mutate(`Origin TEER`=fct_rev(from),
-#          `Destination TEER`=fct_rev(to))|>
-#   ggplot(aes(`Origin TEER`, `Destination TEER`, fill=mass))+
-#   geom_tile()+
-#   scale_fill_viridis_c()+
-#   theme_minimal()
-#
-# plotly::ggplotly(plt)
+plt <- by_teer$transitions[by_teer$age_2011=="15_to_24_years"][[1]]|>
+  mutate(`Origin TEER`=fct_rev(from),
+         `Destination TEER`=fct_rev(to))|>
+  ggplot(aes(`Origin TEER`, `Destination TEER`, fill=mass))+
+  geom_tile()+
+  scale_fill_viridis_c()+
+  theme_minimal()
+
+plotly::ggplotly(plt)
 
 #simulation
 
@@ -206,7 +206,25 @@ sims <- tibble(sim = 1:n_sims,
 empirical_probs <- sims %>%
   summarise(across(stage_1:stage_5, ~ list(prop.table(table(.)))))
 
+#In simulation random sampling noise leads to over-representation in absorbing states.
+
+print(empirical_probs$stage_1)
+print(by_teer$props_2011[[1]])
+
+print(empirical_probs$stage_2)
+print(by_teer$props_2021[[1]])
+
+print(empirical_probs$stage_3)
+print(by_teer$props_2021[[2]])
+
+print(empirical_probs$stage_4)
+print(by_teer$props_2021[[3]])
+
 print(empirical_probs$stage_5)
+print(by_teer$props_2021[[4]])
+
+
+
 
 
 
