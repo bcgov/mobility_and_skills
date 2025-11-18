@@ -42,7 +42,7 @@ get_cost <- function(tbbl){
 }
 
 make_segment_data <- function(transitions, coordinates){
-    transitions|>
+  transitions|>
     left_join(coordinates, by = c("from" = "noc_5")) %>%
     rename(x_from = V1, y_from = V2) %>%
     left_join(coordinates, by = c("to" = "noc_5")) %>%
@@ -95,7 +95,9 @@ network_plot <- function(coordinates, segment_data, top_segments, age_2011, age_
                          " (2011) and ",
                          str_replace_all(age_2021, "_", " "),
                          " (2021)"),
-         colour="Top 8 transitions")
+         colour="Top 8 transitions")+
+    theme(legend.text=element_text(size=14))
+
 }
 
 source_dest_plot <- function(source, dest, age_2011, age_2021, cut_off){
@@ -292,7 +294,9 @@ results <- bind_cols(census_2011$census_2011, census_2021$census_2021)|>
          total_cost=map_dbl(net_transitions, ~ sum(.x$cost)),
          coordinates=list(skills[["mds2"]]),
          segment_data=map2(net_transitions, coordinates, make_segment_data),
-         top_segments=map(segment_data, slice_max, order_by=net_mass, n=8),
+         top_segments=map(segment_data, slice_max, order_by= net_mass, n=8),
+         top_segments=map(top_segments, \(tbbl) tbbl |> mutate(from=str_trunc(str_sub(from, 7), width = 30))),
+         top_segments=map(top_segments, \(tbbl) tbbl |> mutate(to=str_trunc(str_sub(to, 7), width = 30))),
          top_segments=map(top_segments, \(tbbl) tbbl |> unite(segment_name, from, to, sep = " -> ")),
          top_segments=map(top_segments, \(tbbl) tbbl |> mutate(segment_name=fct_reorder(segment_name, net_mass, .desc = TRUE))),
          source_destination_plot=pmap(list(props_2011, props_2021, age_2011, age_2021, cut_off=.005), source_dest_plot),

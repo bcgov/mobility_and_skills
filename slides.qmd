@@ -2,7 +2,11 @@
 title: "Using Optimal Transport theory to predict Occupational Mobility"
 format:
   revealjs:
+    smaller: true
+    slide-number: true
+    scrollable: false
     theme: solarized
+    margin: 0
 slide-number: true
 incremental: true
 widescreen: true
@@ -14,7 +18,6 @@ execute:
   error: false
 ---
 
-
 ```{r, include=FALSE}
 library(tidyverse)
 library(here)
@@ -25,9 +28,9 @@ results <- read_rds("results.rds")
 ## Introduction
 
 * We know very little about occupational mobility.
-* Anecdotally we know that people change careers, and using repeated cross-sectional Census occupation proportions we can see the aggregate shifts in occupation choice.
-* Consider the 2011 Census age group 15-24, which becomes the 2021 Census 25-34 age group.
-* If we ignore the fact that the Census is a sample (regarding occupation) and turn a blind eye to migration, then differences in occupational composition must be due to inter occupational mobility. 
+* Anecdotally we know that people change careers, and using repeated cross-sectional Census NOC proportions we can observe aggregate shifts.
+* Consider the 2011 Census age group 15-24, which 10 years later is the 2021 Census 25-34 age group.
+* If we ignore the fact that the Census is a 25% sample (regarding occupation) and turn a blind eye to migration, then differences in NOC proportions must be due to inter-occupational mobility. 
 
 ---
 
@@ -144,12 +147,14 @@ theme_minimal()
 
 ::: {.column width="50%"}
 
-```{r, fig.width=5, fig.height=5, cache=TRUE}
+```{r, fig.height=5, fig.width=5, cache=TRUE}
 heatmaply::heatmaply(
   skills[["skills_noc_dist"]],
   show_dendrogram = c(FALSE, FALSE),
   showticklabels = c(FALSE, FALSE)
-)
+)|>
+  plotly::layout(autosize = TRUE) |>
+  plotly::config(responsive = TRUE)
 ```
 
 :::
