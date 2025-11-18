@@ -1,0 +1,230 @@
+---
+title: "Using Optimal Transport theory to predict Occupational Mobility"
+format:
+  revealjs:
+    theme: solarized
+slide-number: true
+incremental: true
+widescreen: true
+self-contained: true
+execute:
+  warning: false
+  message: false
+  echo: false
+  error: false
+---
+
+
+```{r, include=FALSE}
+library(tidyverse)
+library(here)
+skills <- read_rds("skills.rds")
+results <- read_rds("results.rds")
+```
+
+## Introduction
+
+* We know very little about occupational mobility.
+* Anecdotally we know that people change careers, and using repeated cross-sectional Census occupation proportions we can see the aggregate shifts in occupation choice.
+* Consider the 2011 Census age group 15-24, which becomes the 2021 Census 25-34 age group.
+* If we ignore the fact that the Census is a sample (regarding occupation) and turn a blind eye to migration, then differences in occupational composition must be due to inter occupational mobility. 
+
+---
+
+## Changes in Occupation Proportions
+
+```{r, fig.width=12, fig.height=9}
+print(results$source_destination_plot[[1]])
+```
+
+---
+
+
+## Changes in Occupation Proportions
+
+```{r, fig.width=12, fig.height=9}
+print(results$source_destination_plot[[2]])
+```
+
+---
+
+
+## Changes in Occupation Proportions
+
+```{r, fig.width=12, fig.height=9}
+print(results$source_destination_plot[[3]])
+```
+
+---
+
+## Changes in Occupation Proportions
+
+```{r, fig.width=12, fig.height=9}
+print(results$source_destination_plot[[4]])
+```
+
+---
+
+## Changes in Occupation Proportions
+
+* Greatest shifts in the occupation distribution occur between the age brackets 15-24 and 25-34: for many individuals this is when the make the transition from "job" to "career", likely after attaining some post secondary education.
+* Both the *number* of occupations with a change in proportion greater than .005, as well as the *scale* of the changes in proportion diminish for older age brackets.
+
+---
+
+## Cost Minimizing Occupational Mobility
+
+* To reiterate, we can not directly observe career changes, but we can infer they must occur based on shifts in occupational proportions between the two census. 
+* Below we make use of the linear programming solution to the optimal transport problem to solve for the occupational transitions which minimize the aggregate cost.
+
+---
+
+## Example
+
+* Suppose goal is to end up with 4 evenly sized piles of dirt.
+* Initially, the piles are arranged in a unit square, and have masses 1kg, 2kg, 3kg, 4kg.
+* Cost is defined to be mass$\times$distance moved.
+* What is least costly way to end up with 4 piles of 2.5kg?
+
+---
+
+## Example
+
+```{r}
+knitr::include_graphics(here("images","just_dirt.svg"))
+```
+
+---
+
+## Example
+
+* From the above, the minimum cost of attaining the desired distribution is $\min(cost)=1+\sqrt2$. 
+* But how does this relate to occupational transitions? Rather than piles of dirt, consider 512 "piles" of workers.
+* Specifically, consider the NOC proportions of those 15-24 in 2011: this corresponds to the size of the original "piles".
+* Likewise, the NOC proportions of those 25-34 in 2021 are the desired "piles".
+* The optimal transport problem solves for the least costly way to move workers to achieve the desired proportions.
+
+---
+
+
+## Transportation cost
+
+* Cost is defined as probability mass moved times distance moved.
+* We use 161 occupational characteristics from ONET to measure the distance between occupations.
+* Principal component analysis is used to reduce the dimensionality of the data. 
+* For our distance metric we calculate the Euclidean distance on the first 10 principal components.
+
+---
+
+## Screeplot
+
+
+```{r}
+eig <- factoextra::get_eig(skills[["onet_pca"]]) |>
+head(n=10)
+eig$Dim <- seq_len(nrow(eig))
+
+
+ggplot(eig, aes(x = factor(Dim))) +
+geom_bar(aes(y = variance.percent), stat = "identity") +
+geom_line(aes(y = cumulative.variance.percent), size = 0.8, group = 1) +
+geom_point(aes(y = cumulative.variance.percent)) +
+scale_y_continuous(
+name = "Individual % variance",
+sec.axis = sec_axis(~ ., name = "Cumulative % variance")
+) +
+labs(title="First 10 components capture over 80% of the variability", 
+     x = "Principal Component") +
+theme_minimal()
+```
+
+---
+
+## Distances Between Occupations {.columns}
+
+::: {.column width="50%"}
+
+```{r, fig.width=5, fig.height=5, cache=TRUE}
+heatmaply::heatmaply(
+  skills[["skills_noc_dist"]],
+  show_dendrogram = c(FALSE, FALSE),
+  showticklabels = c(FALSE, FALSE)
+)
+```
+
+:::
+
+::: {.column width="50%"}
+
+* Along the diagonal the distance is zero between an occupation and itself.
+* Clusters of occupations with similar skill profiles are located in darker rectangles along the diagonal.
+
+:::
+
+---
+
+## Transition Plots
+
+
+```{r, fig.width=12, fig.height=6}
+results$transition_plot[[1]]
+```
+
+---
+
+## Transition Plots
+
+
+```{r, fig.width=12, fig.height=6}
+results$transition_plot[[2]]
+```
+
+---
+
+## Summary of the flows
+
+* The network plots of all the transitions are quite messy.
+* Hard to see what is going on.
+* Below we aggregate all the NOC flows to the TEER level, allowing us to visualize using alluvial plots.
+
+--- 
+
+## TEER Flows
+
+```{r}
+results$teer_alluvium_plot[[1]]
+```
+
+---
+
+
+## TEER Flows
+
+```{r}
+results$teer_alluvium_plot[[2]]
+```
+
+---
+
+
+## TEER Flows
+
+```{r}
+results$teer_alluvium_plot[[3]]
+```
+
+---
+
+
+## TEER Flows
+
+```{r}
+results$teer_alluvium_plot[[4]]
+```
+
+---
+
+
+
+
+
