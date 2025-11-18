@@ -84,25 +84,44 @@ print(results$source_destination_plot[[4]])
 
 ## Example
 
-* Suppose goal is to end up with 4 evenly sized piles of dirt.
-* Initially, the piles are arranged in a unit square, and have masses 1kg, 2kg, 3kg, 4kg.
-* Cost is defined to be mass$\times$distance moved.
-* What is least costly way to end up with 4 piles of 2.5kg?
+- Suppose goal is to end up with 4 evenly sized piles of dirt.
+- Initially, the piles are arranged in a unit square, and have masses 1kg, 2kg, 3kg, 4kg.
+- Cost is defined to be mass$\times$distance moved.
+- What is least costly way to end up with 4 piles of 2.5kg?
+
+::: {.fragment}
+```{r}
+#| out.width: 50%
+#| out.height: 50%
+knitr::include_graphics(here("images","no_arrows.svg"))
+```
+:::
 
 ---
 
-## Example
+## Solution {.columns}
+
+::: {.column width="50%"}
 
 ```{r}
+#| out.width: 100%
+#| out.height: 100%
 knitr::include_graphics(here("images","just_dirt.svg"))
 ```
 
+:::
+
+::: {.column width="50%"}
+
+* Minimum cost of attaining the desired distribution is $\min(cost)=1+\sqrt2$. 
+
+:::
+
 ---
 
-## Example
+## How is this related to labour market?
 
-* From the above, the minimum cost of attaining the desired distribution is $\min(cost)=1+\sqrt2$. 
-* But how does this relate to occupational transitions? Rather than piles of dirt, consider 512 "piles" of workers.
+* Rather than piles of dirt, consider 512 "piles" of workers.
 * Specifically, consider the NOC proportions of those 15-24 in 2011: this corresponds to the size of the original "piles".
 * Likewise, the NOC proportions of those 25-34 in 2021 are the desired "piles".
 * The optimal transport problem solves for the least costly way to move workers to achieve the desired proportions.
@@ -127,7 +146,6 @@ eig <- factoextra::get_eig(skills[["onet_pca"]]) |>
 head(n=10)
 eig$Dim <- seq_len(nrow(eig))
 
-
 ggplot(eig, aes(x = factor(Dim))) +
 geom_bar(aes(y = variance.percent), stat = "identity") +
 geom_line(aes(y = cumulative.variance.percent), size = 0.8, group = 1) +
@@ -148,13 +166,13 @@ theme_minimal()
 ::: {.column width="50%"}
 
 ```{r, fig.height=5, fig.width=5, cache=TRUE}
-heatmaply::heatmaply(
-  skills[["skills_noc_dist"]],
-  show_dendrogram = c(FALSE, FALSE),
-  showticklabels = c(FALSE, FALSE)
-)|>
-  plotly::layout(autosize = TRUE) |>
-  plotly::config(responsive = TRUE)
+# heatmaply::heatmaply(
+#   skills[["skills_noc_dist"]],
+#   show_dendrogram = c(FALSE, FALSE),
+#   showticklabels = c(FALSE, FALSE)
+# )|>
+#   plotly::layout(autosize = TRUE) |>
+#   plotly::config(responsive = TRUE)
 ```
 
 :::
