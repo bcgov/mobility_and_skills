@@ -8,6 +8,7 @@ library(plotly)
 library(scales)
 library(grid)
 library(ggalluvial)
+library(gganimate)
 library(conflicted)
 conflicts_prefer(dplyr::lag)
 conflicts_prefer(dplyr::filter)
@@ -74,32 +75,6 @@ convert_to_teer <- function(transitions){
     summarize(mass=sum(mass))
 }
 
-network_plot <- function(coordinates, segment_data, top_segments, age_2011, age_2021){
-  ggplot()+
-    geom_point(data=coordinates, mapping=aes(V1,V2), size=.25, alpha=.25)+
-    geom_curve(data=segment_data, mapping=aes(x=x_from, y=y_from, xend=x_to, yend=y_to),
-               linewidth=.2,
-               alpha=.2,
-               curvature = .15,
-               colour = "steelblue")+
-    geom_curve(data=top_segments, mapping=aes(x=x_from, y=y_from, xend=x_to, yend=y_to, colour=segment_name),
-               curvature = .15,
-               linewidth = .75,
-               arrow = arrow(length = unit(0.1, "cm"), type = "closed"),
-    )+
-    scale_color_brewer(palette = "Dark2")+
-    theme_void()+
-    labs(title="Solution to Optimal Transport Problem",
-         subtitle=paste0("...for transition between ",
-                         str_replace_all(age_2011, "_", " "),
-                         " (2011) and ",
-                         str_replace_all(age_2021, "_", " "),
-                         " (2021)"),
-         colour="Top 8 transitions")+
-    theme(legend.text=element_text(size=14))
-
-}
-
 source_dest_plot <- function(source, dest, age_2011, age_2021, cut_off){
   full_join(source, dest, by = join_by(noc_5, desc))|>
     mutate(diff=prop.y-prop.x,
@@ -141,6 +116,46 @@ alluvial_plot <- function(tbbl, initial_age, subsequent_age, cost){
       axis.ticks.y = element_blank(),
       axis.text.y = element_blank()
     )
+}
+
+make_long <- function(tbbl){
+  initial <- tbbl|>
+    select(from, to, net_mass, x=x_from, y=y_from)|>
+    mutate(time=0)
+  subsequent <- tbbl|>
+    select(from, to, net_mass, x=x_to, y=y_to)|>
+    mutate(time=10)
+  long_segments <- bind_rows(initial, subsequent)%>%
+    mutate(label=paste(str_trunc(str_sub(from, 7),30), str_trunc(str_sub(to, 7), 30), sep="->"))
+  top8 <- slice_max(long_segments, order_by = net_mass, n=16)
+  bottom <- anti_join(long_segments, top8)
+  list(top8=top8, bottom=bottom)
+}
+
+
+make_base_plot <- function(lst, size_limits = NULL){
+  ggplot(mapping = aes(x = x, y = y, size = net_mass)) +
+    geom_point(data = lst$bottom, alpha = 0.25) +
+    geom_point(data = lst$top8, aes(fill = label), shape = 21, alpha = 0.75) +
+    scale_fill_brewer(
+      palette = "Dark2",
+      guide = guide_legend(override.aes = list(size = 6))
+    ) +
+    scale_size_continuous(range = c(2, 15), limits = size_limits, guide = "none") +
+    coord_equal() +
+    theme_minimal(base_size = 14) +
+    labs(
+      title = "Year: {round(frame_time,1)}",
+      fill = "Top 8 transfers",
+      x = NULL,
+      y = NULL
+    ) +
+    theme(
+      legend.text = element_text(size = 20),
+      legend.title = element_text(size = 22)
+    ) +
+    transition_time(time) +
+    ease_aes("linear")
 }
 
 
@@ -294,22 +309,30 @@ results <- bind_cols(census_2011$census_2011, census_2021$census_2021)|>
          total_cost=map_dbl(net_transitions, ~ sum(.x$cost)),
          coordinates=list(skills[["mds2"]]),
          segment_data=map2(net_transitions, coordinates, make_segment_data),
-         top_segments=map(segment_data, slice_max, order_by= net_mass, n=8),
-         top_segments=map(top_segments, \(tbbl) tbbl |> mutate(from=str_trunc(str_sub(from, 7), width = 30))),
-         top_segments=map(top_segments, \(tbbl) tbbl |> mutate(to=str_trunc(str_sub(to, 7), width = 30))),
-         top_segments=map(top_segments, \(tbbl) tbbl |> unite(segment_name, from, to, sep = " -> ")),
-         top_segments=map(top_segments, \(tbbl) tbbl |> mutate(segment_name=fct_reorder(segment_name, net_mass, .desc = TRUE))),
+         long_segments=map(segment_data, make_long),
+         base_for_animation=map(long_segments, make_base_plot, size_limits = c(0, .025)),
          source_destination_plot=pmap(list(props_2011, props_2021, age_2011, age_2021, cut_off=.005), source_dest_plot),
-         transition_plot=pmap(list(coordinates, segment_data, top_segments, age_2011, age_2021), network_plot),
          teer_alluvium_plot=pmap(list(teer_transitions, age_2011, age_2021, total_cost), alluvial_plot)
          )
-
-
 
 write_rds(skills, "skills.rds")
 write_rds(results, "results.rds")
 
-
-
+walk2(
+  results$base_for_animation,
+  results$facet_label,
+  ~ anim_save(
+    paste0(.y, ".mp4"),
+    animation = animate(
+      .x,
+      nframes = 240,
+      fps = 20,
+      width = 1920,
+      height = 1080,
+      renderer = ffmpeg_renderer()
+    ),
+    extra_args = c("-c:v", "libx264", "-pix_fmt", "yuv420p")
+  )
+)
 
 

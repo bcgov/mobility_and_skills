@@ -36,7 +36,7 @@ results <- read_rds("results.rds")
 
 ## Changes in Occupation Proportions
 
-```{r, fig.width=12, fig.height=9}
+```{r, fig.retina=2}
 print(results$source_destination_plot[[1]])
 ```
 
@@ -45,7 +45,7 @@ print(results$source_destination_plot[[1]])
 
 ## Changes in Occupation Proportions
 
-```{r, fig.width=12, fig.height=9}
+```{r, fig.retina=2}
 print(results$source_destination_plot[[2]])
 ```
 
@@ -54,7 +54,7 @@ print(results$source_destination_plot[[2]])
 
 ## Changes in Occupation Proportions
 
-```{r, fig.width=12, fig.height=9}
+```{r, fig.retina=2}
 print(results$source_destination_plot[[3]])
 ```
 
@@ -62,7 +62,7 @@ print(results$source_destination_plot[[3]])
 
 ## Changes in Occupation Proportions
 
-```{r, fig.width=12, fig.height=9}
+```{r, fig.retina=2}
 print(results$source_destination_plot[[4]])
 ```
 
@@ -78,7 +78,8 @@ print(results$source_destination_plot[[4]])
 ## Cost Minimizing Occupational Mobility
 
 * To reiterate, we can not directly observe career changes, but we can infer they must occur based on shifts in occupational proportions between the two census. 
-* Below we make use of the linear programming solution to the optimal transport problem to solve for the occupational transitions which minimize the aggregate cost.
+* There is an infinite set of occupational changes that would be consistent with both the initial and subsequent proportions. 
+* Below we make use of the linear programming solution to the optimal transport problem to solve for the occupational transitions which minimizes "cost".
 
 ---
 
@@ -86,7 +87,7 @@ print(results$source_destination_plot[[4]])
 
 - Suppose goal is to end up with 4 evenly sized piles of dirt.
 - Initially, the piles are arranged in a unit square, and have masses 1kg, 2kg, 3kg, 4kg.
-- Cost is defined to be mass$\times$distance moved.
+- Cost is defined to be $\sum mass \times distance$.
 - What is least costly way to end up with 4 piles of 2.5kg?
 
 ::: {.fragment}
@@ -113,7 +114,10 @@ knitr::include_graphics(here("images","just_dirt.svg"))
 
 ::: {.column width="50%"}
 
-* Minimum cost of attaining the desired distribution is $\min(cost)=1+\sqrt2$. 
+* Move .5kg 1 unit of distance.
+* Move 1kg $\sqrt2$ units of distance (hypotenuse)
+* Move .5kg 1 unit of distance.
+* $\min(cost)=1+\sqrt2$. 
 
 :::
 
@@ -124,14 +128,14 @@ knitr::include_graphics(here("images","just_dirt.svg"))
 * Rather than piles of dirt, consider 512 "piles" of workers.
 * Specifically, consider the NOC proportions of those 15-24 in 2011: this corresponds to the size of the original "piles".
 * Likewise, the NOC proportions of those 25-34 in 2021 are the desired "piles".
-* The optimal transport problem solves for the least costly way to move workers to achieve the desired proportions.
+* There is an infinite number of ways to move workers to attain the desired piles.
+* The optimal transport problem picks the least costly solution from the set of possible solutions.
+* The solution provides the lower bound of (costly) occupational transitions.
 
 ---
 
+## Distance between occupations
 
-## Transportation cost
-
-* Cost is defined as probability mass moved times distance moved.
 * We use 161 occupational characteristics from ONET to measure the distance between occupations.
 * Principal component analysis is used to reduce the dimensionality of the data. 
 * For our distance metric we calculate the Euclidean distance on the first 10 principal components.
@@ -141,7 +145,7 @@ knitr::include_graphics(here("images","just_dirt.svg"))
 ## Screeplot
 
 
-```{r}
+```{r, fig.retina=2}
 eig <- factoextra::get_eig(skills[["onet_pca"]]) |>
 head(n=10)
 eig$Dim <- seq_len(nrow(eig))
@@ -166,13 +170,13 @@ theme_minimal()
 ::: {.column width="50%"}
 
 ```{r, fig.height=5, fig.width=5, cache=TRUE}
-# heatmaply::heatmaply(
-#   skills[["skills_noc_dist"]],
-#   show_dendrogram = c(FALSE, FALSE),
-#   showticklabels = c(FALSE, FALSE)
-# )|>
-#   plotly::layout(autosize = TRUE) |>
-#   plotly::config(responsive = TRUE)
+heatmaply::heatmaply(
+  skills[["skills_noc_dist"]],
+  show_dendrogram = c(FALSE, FALSE),
+  showticklabels = c(FALSE, FALSE)
+)|>
+  plotly::layout(autosize = TRUE) |>
+  plotly::config(responsive = TRUE)
 ```
 
 :::
@@ -186,35 +190,52 @@ theme_minimal()
 
 ---
 
-## Transition Plots
+## Transitions: 15 to 24 years -> 25 to 34 years
 
-
-```{r, fig.width=12, fig.height=6}
-results$transition_plot[[1]]
-```
+<video width="800" controls>
+  <source src="15_to_24_years -> 25_to_34_years.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ---
 
-## Transition Plots
+## Transitions: 25 to 34 years -> 35 to 44 years
 
+<video width="800" controls>
+  <source src="25_to_34_years -> 35_to_44_years.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
-```{r, fig.width=12, fig.height=6}
-results$transition_plot[[2]]
-```
+---
+
+## Transitions: 35 to 44 years -> 45 to 54 years
+
+<video width="800" controls>
+  <source src="35_to_44_years -> 45_to_54_years.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+---
+
+## Transitions: 45 to 54 years -> 55 to 64 years
+
+<video width="800" controls>
+  <source src="45_to_54_years -> 55_to_64_years.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ---
 
 ## Summary of the flows
 
-* The network plots of all the transitions are quite messy.
-* Hard to see what is going on.
-* Below we aggregate all the NOC flows to the TEER level, allowing us to visualize using alluvial plots.
+* Maybe animations are not your thing.
+* Below we aggregate all the NOC flows to the TEER level, allowing us to visualize using (static) alluvial plots.
 
 --- 
 
 ## TEER Flows
 
-```{r}
+```{r, fig.retina=2}
 results$teer_alluvium_plot[[1]]
 ```
 
@@ -223,7 +244,7 @@ results$teer_alluvium_plot[[1]]
 
 ## TEER Flows
 
-```{r}
+```{r, fig.retina=2}
 results$teer_alluvium_plot[[2]]
 ```
 
@@ -232,7 +253,7 @@ results$teer_alluvium_plot[[2]]
 
 ## TEER Flows
 
-```{r}
+```{r, fig.retina=2}
 results$teer_alluvium_plot[[3]]
 ```
 
@@ -241,7 +262,7 @@ results$teer_alluvium_plot[[3]]
 
 ## TEER Flows
 
-```{r}
+```{r, fig.retina=2}
 results$teer_alluvium_plot[[4]]
 ```
 
