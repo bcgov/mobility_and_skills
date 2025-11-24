@@ -122,7 +122,7 @@ knitr::include_graphics(here("images","no_arrows.svg"))
 ```{r}
 #| out.width: 100%
 #| out.height: 100%
-knitr::include_graphics(here("images","just_dirt.svg"))
+knitr::include_graphics(here("images","with_arrows.svg"))
 ```
 :::
 
@@ -239,8 +239,9 @@ Your browser does not support the video tag. </video>
 
 ## TEER Summaries
 
--   Hard to visualize 500+ flows.  
--   Below we aggregate all the NOC flows to the TEER level, allowing us to visualize using (static) alluvial plots.
+-  The animations above made use of Multidimensional scaling (MDS) of the skill distances between occupations. 
+-  Because distances are based on 10D data (the first 10 principal components), the 2D "locations" of the origin and destination occupations (where the bubbles start and end) should be taken with a grain of salt. 
+-  If we aggregate the flows to the TEER level, we can visualize using (static) alluvial plots.
 
 ------------------------------------------------------------------------
 
